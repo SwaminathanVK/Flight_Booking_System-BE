@@ -12,54 +12,31 @@ const createJWTToken = (payload) => {
 };
 
 export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
-  console.log("req", req.body);
+  const { name, email, password, role = "user" } = req.body;
 
-  // Basic field validation
   if (!name || !email || !password) {
     return res.status(400).json({ error: "Name, email, and password are required fields" });
   }
 
   try {
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create new user
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
+      role, // New line added
     });
 
     await newUser.save();
 
-    // Create token after registration
-    // const tokenPayload = {
-    //   userId: newUser._id,
-    //   email: newUser.email,
-    //   isAdmin: newUser.isAdmin,
-    // };
-
-   // const token = createJWTToken(tokenPayload);
-
-    // const userData = {
-    //   _id: newUser._id,
-    //   name: newUser.name,
-    //   email: newUser.email,
-    //   isAdmin: newUser.isAdmin,
-    //   profilePic: newUser.profilePic,
-    // };
-
     return res.status(201).json({
       message: "User registered successfully",
-      //token,
-      // data: userData,
     });
   } catch (err) {
     console.error("Registration error:", err);
@@ -92,7 +69,7 @@ export const loginUser = async (req, res) => {
     const payload = {
       userId: user._id,
       email: user.email,
-      isAdmin: user.isAdmin,
+      role: user.role,
     };
 
     // Create JWT token
@@ -102,7 +79,7 @@ export const loginUser = async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      isAdmin: user.isAdmin,
+      role: user.role,
       profilePic: user.profilePic,
     };
 
